@@ -11,7 +11,7 @@ class Program
     UDPSender udpSender = new UDPSender(PORT);
     udpSender.send(Encoding.UTF8.GetBytes(args[0]));
     
-    var receivedBytes = await udpSender.receiveAsync(13);
+    var receivedBytes = await udpSender.receiveAsync(1);
     var receivedMessage = Encoding.UTF8.GetString(receivedBytes);
 
     Console.WriteLine(receivedMessage);
