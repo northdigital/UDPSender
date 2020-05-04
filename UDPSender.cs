@@ -1,10 +1,12 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 
 public class UDPSender
 {
   private UdpClient udpClient;
-  IPEndPoint groupEP;
+  private IPEndPoint endPointBroadcast;
 
   public UDPSender(int port)
   {
@@ -14,17 +16,29 @@ public class UDPSender
   private void init(int port)
   {
     udpClient = new UdpClient();
-    groupEP = new IPEndPoint(IPAddress.Broadcast, port);
+    endPointBroadcast = new IPEndPoint(IPAddress.Broadcast, port);
   }
   
-  public byte[] receive()
+  public async Task<byte[]> receiveAsync(int retries)
   {
-    return udpClient.Receive(ref groupEP);
+    return await Task<byte[]>.Run(() =>
+    {
+      while(retries >= 0)
+      {
+        if (udpClient.Available > 0)
+          return udpClient.Receive(ref endPointBroadcast);
+        
+        retries--;
+        Thread.Sleep(1000);
+      }
+
+      return new byte[] {};
+    });
   }
 
   public void send(byte[] data)
   {
-    udpClient.Send(data, data.Length, groupEP);
+    udpClient.Send(data, data.Length, endPointBroadcast);
   }
 
   public void close()
